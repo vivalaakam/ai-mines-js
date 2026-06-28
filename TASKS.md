@@ -9,7 +9,7 @@
 ## Фаза 0 — Инфраструктура и документация
 
 - [x] **T-001** Инициализация monorepo (pnpm workspaces, корневой `package.json`, `tsconfig.base.json`, ESLint, Prettier, Vitest)
-- [ ] **T-002** Создание файлов для кодовых агентов: `AGENTS.md`, `docs/architecture.md`, `docs/game-design.md`, `docs/engine-api.md`, `docs/persistence.md`
+- [x] **T-002** Создание файлов для кодовых агентов: `AGENTS.md`, `docs/architecture.md`, `docs/game-design.md`, `docs/engine-api.md`, `docs/persistence.md`
 
 ---
 
