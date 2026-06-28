@@ -15,7 +15,7 @@
 
 ## Фаза 1 — packages/shared
 
-- [ ] **T-003** `packages/shared`: базовые типы и ID (`ids.ts`, `types.ts`, `errors.ts`)
+- [x] **T-003** `packages/shared`: базовые типы и ID (`ids.ts`, `types.ts`, `errors.ts`)
   - ResourceId, WorkerId, StorageId, OrderId, LevelId, ChunkId
   - CellKind, CellVisibility, CellAccessibility, GamePhase, OrderState
   - Базовые union-типы команд и запросов (заглушки, уточняются в engine)
