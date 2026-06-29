@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GameEngineFactory } from '@ai-mines/engine';
 import type { GameEngine, EngineState } from '@ai-mines/engine';
+import { MapRenderer, CELL_SIZE } from './MapRenderer.js';
 
 
 // ---- Persistence (localStorage) ----
@@ -84,9 +85,21 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
-// ---- Game loop ----
+// ---- Map rendering ----
 
 const engine = createEngine();
+const mapRenderer = new MapRenderer(scene);
+
+// Build map from first level
+const initialState = engine.exportState();
+const firstLevel = initialState.levels.values().next().value;
+if (firstLevel) {
+  mapRenderer.buildLevel(firstLevel);
+  // Center camera on entry point
+  mapRenderer.centerOn(firstLevel.entryX * CELL_SIZE, firstLevel.entryY * CELL_SIZE);
+}
+
+// ---- Game loop ----
 
 // Advance one real-time tick every second (1 tick = 1 game second)
 const TICK_INTERVAL_MS = 1000;
@@ -94,11 +107,20 @@ let lastTickTime = performance.now();
 
 function applyAndHandleEvents(result: ReturnType<GameEngine['apply']>): void {
   if (!result.ok) return;
+  let needsMapRebuild = false;
   for (const event of result.events) {
     if (event.type === 'autosave_requested') {
       saveState(engine.exportState());
       console.log(`[mines] autosave (${event.reason})`);
     }
+    if (event.type === 'shift_completed') {
+      needsMapRebuild = true;
+    }
+  }
+  if (needsMapRebuild) {
+    const state = engine.exportState();
+    const level = state.levels.values().next().value;
+    if (level) mapRenderer.buildLevel(level);
   }
 }
 
