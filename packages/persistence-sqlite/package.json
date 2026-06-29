@@ -18,9 +18,11 @@
   },
   "dependencies": {
     "@ai-mines/engine": "workspace:*",
-    "@ai-mines/shared": "workspace:*"
+    "@ai-mines/shared": "workspace:*",
+    "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "vitest": "^2.0.0"
   }
 }
