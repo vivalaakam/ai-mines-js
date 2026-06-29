@@ -109,7 +109,10 @@ if (firstLevel) {
 const TICK_INTERVAL_MS = 1000;
 let lastTickTime = performance.now();
 
-function applyAndHandleEvents(result: ReturnType<GameEngine['apply']>): void {
+let uiDirty = true;
+
+const applyCmd = (cmd: Parameters<GameEngine['apply']>[0]): void => {
+  const result = engine.apply(cmd);
   if (!result.ok) { console.error('[mines] command failed:', result.error); return; }
   let needsMapRebuild = false;
   for (const event of result.events) {
@@ -117,16 +120,17 @@ function applyAndHandleEvents(result: ReturnType<GameEngine['apply']>): void {
       saveState(engine.exportState());
       console.log(`[mines] autosave (${event.reason})`);
     }
-    if (event.type === 'shift_completed') {
-      needsMapRebuild = true;
-    }
+    if (event.type === 'shift_completed') needsMapRebuild = true;
   }
   if (needsMapRebuild) {
     const state = engine.exportState();
     const level = state.levels.values().next().value;
     if (level) mapRenderer.buildLevel(level);
   }
-}
+  uiDirty = true;
+};
+
+let lastUITick = -1;
 
 function gameLoop(now: number): void {
   requestAnimationFrame(gameLoop);
@@ -138,7 +142,7 @@ function gameLoop(now: number): void {
     if (elapsed >= TICK_INTERVAL_MS) {
       const ticks = Math.floor(elapsed / TICK_INTERVAL_MS);
       lastTickTime = now - (elapsed % TICK_INTERVAL_MS);
-      applyAndHandleEvents(engine.apply({ type: 'tick', ticksPassed: ticks }));
+      applyCmd({ type: 'tick', ticksPassed: ticks });
     }
   }
 
@@ -147,23 +151,22 @@ function gameLoop(now: number): void {
   const level = state.levels.values().next().value;
   if (level) workerRenderer.update(level, state.workers as Map<string, import('@ai-mines/engine').WorkerData>);
 
-  updateUI(engine, (cmd) => applyAndHandleEvents(engine.apply(cmd)));
+  // Rebuild UI only on state change or tick counter change (not every frame)
+  if (uiDirty || status.currentTick !== lastUITick) {
+    updateUI(engine, applyCmd);
+    uiDirty = false;
+    lastUITick = status.currentTick;
+  }
 
   renderer.render(scene, camera);
 }
 
 // ---- Input ----
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const input = new InputHandler(
-  renderer.domElement,
-  camera,
-  engine,
-  (cmd) => applyAndHandleEvents(engine.apply(cmd)),
-);
+const input = new InputHandler(renderer.domElement, camera, engine, applyCmd);
 
 requestAnimationFrame(gameLoop);
 
 // Expose engine on window for dev console access
 (window as unknown as Record<string, unknown>).engine = engine;
-(window as unknown as Record<string, unknown>).applyCmd = (cmd: Parameters<GameEngine['apply']>[0]): void =>
-  applyAndHandleEvents(engine.apply(cmd));
+(window as unknown as Record<string, unknown>).applyCmd = applyCmd;
