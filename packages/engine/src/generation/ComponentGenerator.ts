@@ -3,7 +3,7 @@ import type { CellComponent, ResourceRarity } from '@ai-mines/shared';
 import type { ResourceId } from '@ai-mines/shared';
 import { createRng, hashString } from './rng.js';
 
-// Probability that a resource of given rarity appears in a deposit cell
+// Base probability that a resource of given rarity appears in a deposit cell
 const RARITY_PROB: Record<ResourceRarity, number> = {
   common: 0.65,
   uncommon: 0.35,
@@ -11,6 +11,17 @@ const RARITY_PROB: Record<ResourceRarity, number> = {
   epic: 0.08,
   legendary: 0.03,
 };
+
+/**
+ * Depth-scaled probability for a resource.
+ * Resources get a +50% debut bonus at their minDepth, fading to base over 5 levels.
+ */
+export function depthScaledProb(rarity: ResourceRarity, minDepth: number, depth: number): number {
+  const base = RARITY_PROB[rarity];
+  const depthsAboveMin = depth - minDepth;
+  const bonus = Math.max(0, 1 - depthsAboveMin / 5) * 0.5; // 0.5 at debut, 0 at minDepth+5
+  return Math.min(1, base * (1 + bonus));
+}
 
 export interface ComponentGenParams {
   readonly seedPhrase: string;
@@ -32,10 +43,10 @@ export function generateCellComponents(params: ComponentGenParams): CellComponen
   // Resources available at this depth
   const available = RESOURCES.filter((r) => r.minDepth <= levelDepth);
 
-  // Roll every available resource independently, collect all hits
+  // Roll every available resource independently with depth-scaled probability
   const hits: ResourceId[] = [];
   for (const res of available) {
-    if (rng() < RARITY_PROB[res.rarity]) {
+    if (rng() < depthScaledProb(res.rarity, res.minDepth, levelDepth)) {
       hits.push(res.id);
     }
   }

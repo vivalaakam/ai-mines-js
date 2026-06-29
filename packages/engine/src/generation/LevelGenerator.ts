@@ -1,6 +1,6 @@
-import { levelId as makeLevelId } from '@ai-mines/shared';
+import { RESOURCES, levelId as makeLevelId } from '@ai-mines/shared';
 import type { BalanceConfig } from '@ai-mines/shared';
-import type { LevelData } from '../state/types.js';
+import type { CellData, LevelData } from '../state/types.js';
 import { generateChunk, type CellForce } from './ChunkGenerator.js';
 import { createRng, hashString } from './rng.js';
 
@@ -69,7 +69,7 @@ export function generateLevel(config: LevelGenConfig, balance: BalanceConfig): L
     }
   }
 
-  return {
+  const level: LevelData = {
     id,
     depth,
     entryX: entryCenterX,
@@ -78,6 +78,56 @@ export function generateLevel(config: LevelGenConfig, balance: BalanceConfig): L
     stairsY: stairsCenterY,
     chunks,
   };
+
+  guaranteeDebutResources(level, depth);
+
+  return level;
+}
+
+/**
+ * Ensures each resource debuting at this depth (minDepth === depth) appears in
+ * at least one deposit cell. Injects a small component into the first available
+ * deposit when missing.
+ */
+function guaranteeDebutResources(level: LevelData, depth: number): void {
+  const debutResources = RESOURCES.filter((r) => r.minDepth === depth);
+  if (debutResources.length === 0) return;
+
+  // Collect all deposit cells for quick scan + injection
+  const depositCells: CellData[] = [];
+  for (const chunk of level.chunks.values()) {
+    for (const cell of chunk.cells) {
+      if (cell.kind === 'deposit') depositCells.push(cell);
+    }
+  }
+  if (depositCells.length === 0) return;
+
+  for (const res of debutResources) {
+    const alreadyPresent = depositCells.some((c) =>
+      c.components.some((comp) => comp.resourceId === res.id),
+    );
+    if (alreadyPresent) continue;
+
+    // Inject into first deposit cell
+    const cell = depositCells[0];
+    if (!cell) continue;
+    const totalAmount = cell.components.reduce((s, c) => s + c.initialAmount, 0);
+    const injectAmount = Math.max(1, Math.round(totalAmount * 0.1));
+    // Add with a small ratio (will be renormalized by consumer)
+    const smallRatio = 0.05;
+    cell.components.push({
+      type: 'resource',
+      resourceId: res.id,
+      ratio: smallRatio,
+      initialAmount: injectAmount,
+      remainingAmount: injectAmount,
+    });
+    // Renormalize
+    const ratioSum = cell.components.reduce((s, c) => s + c.ratio, 0);
+    for (const comp of cell.components) {
+      (comp as { ratio: number }).ratio = comp.ratio / ratioSum;
+    }
+  }
 }
 
 /** All non-center chunks in the initial area with Manhattan distance ≥ 2 from center */

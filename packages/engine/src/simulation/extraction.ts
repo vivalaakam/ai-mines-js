@@ -18,6 +18,9 @@ function storageAvailable(state: EngineState, resourceId: ResourceId): number {
 }
 
 function addToStorage(state: EngineState, resourceId: ResourceId, amount: number): void {
+  if (!state.unlockedResources.includes(resourceId)) {
+    state.unlockedResources.push(resourceId);
+  }
   for (const s of state.storages.values()) {
     if (s.resourceId !== resourceId) continue;
     const space = s.capacity - s.storedAmount;
