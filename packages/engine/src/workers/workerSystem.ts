@@ -74,6 +74,12 @@ export function applyMergeWorkers(state: EngineState, cmd: MergeWorkersCommand):
       error: engineError('WRONG_PHASE', 'merge_workers requires shift_planning'),
     };
   }
+  if (cmd.workerIdA === cmd.workerIdB) {
+    return {
+      ok: false,
+      error: engineError('WORKER_LEVEL_MISMATCH', 'Cannot merge a worker with itself'),
+    };
+  }
   const wA = state.workers.get(cmd.workerIdA);
   const wB = state.workers.get(cmd.workerIdB);
   if (!wA) {
