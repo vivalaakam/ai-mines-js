@@ -2,6 +2,7 @@ import type { CellAccessibility, CellKind, CellVisibility } from '@ai-mines/shar
 import type { LevelId } from '@ai-mines/shared';
 import { chunkId } from '@ai-mines/shared';
 import type { CellData, ChunkData } from '../state/types.js';
+import { generateCellComponents } from './ComponentGenerator.js';
 import { createRng, makeChunkSeed } from './rng.js';
 
 export interface CellForce {
@@ -24,10 +25,8 @@ export interface GenerateChunkParams {
   readonly noObstacleCells: ReadonlySet<string>;
 }
 
-// Cell type probability thresholds
-const OBSTACLE_THRESHOLD = 0.03; // 3%
-const EMPTY_THRESHOLD = 0.12; // 9% empty (between 3% and 12%)
-// remaining ~88% → deposit
+const OBSTACLE_THRESHOLD = 0.03;
+const EMPTY_THRESHOLD = 0.12;
 
 export function generateChunk(params: GenerateChunkParams): ChunkData {
   const {
@@ -75,15 +74,18 @@ export function generateChunk(params: GenerateChunkParams): ChunkData {
         }
       }
 
-      cells.push({
-        x: wx,
-        y: wy,
-        kind,
-        visibility,
-        accessibility,
-        workProgress: 0,
-        components: [],
-      });
+      const components =
+        kind === 'deposit'
+          ? generateCellComponents({
+              seedPhrase,
+              generatorVersion,
+              levelDepth,
+              worldX: wx,
+              worldY: wy,
+            })
+          : [];
+
+      cells.push({ x: wx, y: wy, kind, visibility, accessibility, workProgress: 0, components });
     }
   }
 
