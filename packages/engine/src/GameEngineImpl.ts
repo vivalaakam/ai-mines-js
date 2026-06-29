@@ -6,6 +6,12 @@ import type { EngineEvent } from './events/types.js';
 import type { EngineQuery, GameStatusResult, QueryResult } from './queries/types.js';
 import type { EngineState } from './state/types.js';
 import { runExtraction } from './simulation/extraction.js';
+import {
+  applyBuyStorage,
+  applyUpgradeStorage,
+  readStorageCosts,
+  readStorages,
+} from './storage/storageSystem.js';
 import { ticksRemainingInShift } from './time/time.js';
 import {
   applyAssignWorker,
@@ -45,6 +51,10 @@ export class GameEngineImpl implements GameEngine {
         return applyAssignWorker(this.state, this.balance, command);
       case 'unassign_worker':
         return applyUnassignWorker(this.state, command);
+      case 'buy_storage':
+        return applyBuyStorage(this.state, this.balance, command);
+      case 'upgrade_storage':
+        return applyUpgradeStorage(this.state, this.balance, command);
       default:
         return {
           ok: false,
@@ -61,6 +71,12 @@ export class GameEngineImpl implements GameEngine {
         return readWorkers(this.state) as QueryResult<Q>;
       case 'get_worker_costs':
         return readWorkerCosts(this.state, this.balance) as QueryResult<Q>;
+      case 'get_storages':
+        return readStorages(this.state) as QueryResult<Q>;
+      case 'get_storage_costs': {
+        const q = query as import('./queries/types.js').GetStorageCostsQuery;
+        return readStorageCosts(this.state, this.balance, q.resourceId) as QueryResult<Q>;
+      }
       default:
         throw new Error(`Query "${query.type}" not yet implemented`);
     }

@@ -68,6 +68,14 @@ export interface BalanceConfig {
   readonly workerBaseSpeed: number;
   /** Speed multiplier per worker level */
   readonly workerSpeedMultiplier: number;
+  /** Cost to buy a new storage unit for any resource */
+  readonly storageBaseCost: number;
+  /** Upgrade cost multiplier per level (cost = storageBaseCost * storageUpgradeCostMultiplier^currentLevel) */
+  readonly storageUpgradeCostMultiplier: number;
+  /** Capacity of a level-1 storage unit */
+  readonly storageBaseCapacity: number;
+  /** Capacity multiplier per level (capacity = storageBaseCapacity * storageCapacityMultiplier^(level-1)) */
+  readonly storageCapacityMultiplier: number;
 }
 
 export const DEFAULT_BALANCE: BalanceConfig = {
@@ -95,4 +103,8 @@ export const DEFAULT_BALANCE: BalanceConfig = {
   workerCostMultiplier: 2.0,
   workerBaseSpeed: 1.0,
   workerSpeedMultiplier: 1.5,
+  storageBaseCost: 100,
+  storageUpgradeCostMultiplier: 2.0,
+  storageBaseCapacity: 100,
+  storageCapacityMultiplier: 2.0,
 };
