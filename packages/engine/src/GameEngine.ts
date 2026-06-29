@@ -3,6 +3,7 @@ import type { BalanceConfig, EngineError } from '@ai-mines/shared';
 import { GameEngineImpl } from './GameEngineImpl.js';
 import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
+import { generateLevel } from './generation/LevelGenerator.js';
 import type { EngineQuery, QueryResult } from './queries/types.js';
 import type { EngineState, NewGameConfig } from './state/types.js';
 import { makeInitialState } from './state/makeInitialState.js';
@@ -27,7 +28,16 @@ export class GameEngineFactory {
       throw new Error(engineError('WRONG_PHASE', 'seedPhrase must not be empty').message);
     }
     const balance = resolveBalance(config.balance);
-    return new GameEngineImpl(makeInitialState(config, balance), balance);
+    const state = makeInitialState(config, balance);
+
+    // Generate the first level (depth 0)
+    const level = generateLevel(
+      { seedPhrase: config.seedPhrase, generatorVersion: state.generatorVersion, depth: 0 },
+      balance,
+    );
+    state.levels.set(level.id, level);
+
+    return new GameEngineImpl(state, balance);
   }
 
   static createFromState(state: EngineState, balanceOverride?: Partial<BalanceConfig>): GameEngine {

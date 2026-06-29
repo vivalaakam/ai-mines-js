@@ -47,6 +47,8 @@ export interface LevelData {
   readonly depth: number;
   readonly entryX: number;
   readonly entryY: number;
+  readonly stairsX: number;
+  readonly stairsY: number;
   chunks: Map<ChunkId, ChunkData>;
 }
 
