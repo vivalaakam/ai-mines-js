@@ -110,7 +110,7 @@ const TICK_INTERVAL_MS = 1000;
 let lastTickTime = performance.now();
 
 function applyAndHandleEvents(result: ReturnType<GameEngine['apply']>): void {
-  if (!result.ok) return;
+  if (!result.ok) { console.error('[mines] command failed:', result.error); return; }
   let needsMapRebuild = false;
   for (const event of result.events) {
     if (event.type === 'autosave_requested') {

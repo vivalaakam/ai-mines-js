@@ -1,4 +1,5 @@
 import type { GameEngine } from '@ai-mines/engine';
+import { RESOURCES } from '@ai-mines/shared';
 
 type ApplyCmd = (cmd: Parameters<GameEngine['apply']>[0]) => void;
 
@@ -86,20 +87,24 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
     topBar.appendChild(btn('⏩ Fast Forward', () => applyCmd({ type: 'fast_forward_to_shift_end' })));
   }
   topBar.appendChild(btn('💾 Save', () => applyCmd({ type: 'save_game' })));
+  topBar.appendChild(btn('🗑 New Game', () => { localStorage.clear(); location.reload(); }));
 
   // Storages
   const sqRows = engine.read({ type: 'get_storages' });
+  const ownedResourceIds = new Set(sqRows.storages.map((s) => s.resource.id));
   rebuildPanel(storagePanel, 'Storages', (frag) => {
-    if (!sqRows.storages.length) {
-      frag.appendChild(row('— none —'));
-      return;
-    }
     for (const s of sqRows.storages) {
       frag.appendChild(row(`${s.resource.id}  ${Math.floor(s.storedAmount)}/${s.capacity}  Lv${s.level}`));
       if (status.phase === 'shift_planning') {
         frag.appendChild(btn('↑ Upgrade', () => applyCmd({ type: 'upgrade_storage', storageId: s.id })));
       }
     }
+    if (status.phase === 'shift_planning') {
+      for (const r of RESOURCES.filter((r) => r.minDepth === 0 && !ownedResourceIds.has(r.id))) {
+        frag.appendChild(btn(`+ Buy ${r.name} Storage`, () => applyCmd({ type: 'buy_storage', resourceId: r.id })));
+      }
+    }
+    if (!sqRows.storages.length && status.phase !== 'shift_planning') frag.appendChild(row('— none —'));
   });
 
   // Workers
