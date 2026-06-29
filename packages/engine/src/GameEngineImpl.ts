@@ -5,6 +5,7 @@ import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
 import type { EngineQuery, GameStatusResult, QueryResult } from './queries/types.js';
 import type { EngineState } from './state/types.js';
+import { runExtraction } from './simulation/extraction.js';
 import { ticksRemainingInShift } from './time/time.js';
 import {
   applyAssignWorker,
@@ -84,9 +85,10 @@ export class GameEngineImpl implements GameEngine {
 
     const remaining = ticksRemainingInShift(this.state, this.balance.ticksPerShift);
     const toProcess = Math.min(ticksPassed, remaining);
+
+    const events: EngineEvent[] = [...runExtraction(this.state, this.balance, toProcess)];
     this.state.currentTick += toProcess;
 
-    const events: EngineEvent[] = [];
     if (toProcess === remaining) {
       this.state.phase = 'shift_planning';
       events.push({ type: 'shift_completed', shiftNumber: this.state.currentShift });
@@ -105,12 +107,14 @@ export class GameEngineImpl implements GameEngine {
     }
 
     const remaining = ticksRemainingInShift(this.state, this.balance.ticksPerShift);
+    const extractionEvents = runExtraction(this.state, this.balance, remaining);
     this.state.currentTick += remaining;
     this.state.phase = 'shift_planning';
 
     return {
       ok: true,
       events: [
+        ...extractionEvents,
         { type: 'shift_completed', shiftNumber: this.state.currentShift },
         { type: 'autosave_requested', reason: 'shift_completed' },
       ],

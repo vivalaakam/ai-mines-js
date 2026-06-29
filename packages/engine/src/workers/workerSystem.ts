@@ -67,20 +67,26 @@ export function applyBuyWorker(
   return { ok: true, events: [] };
 }
 
-export function applyMergeWorkers(
-  state: EngineState,
-  cmd: MergeWorkersCommand,
-): ApplyResult {
+export function applyMergeWorkers(state: EngineState, cmd: MergeWorkersCommand): ApplyResult {
   if (state.phase !== 'shift_planning') {
-    return { ok: false, error: engineError('WRONG_PHASE', 'merge_workers requires shift_planning') };
+    return {
+      ok: false,
+      error: engineError('WRONG_PHASE', 'merge_workers requires shift_planning'),
+    };
   }
   const wA = state.workers.get(cmd.workerIdA);
   const wB = state.workers.get(cmd.workerIdB);
   if (!wA) {
-    return { ok: false, error: engineError('WORKER_NOT_FOUND', `Worker ${cmd.workerIdA} not found`) };
+    return {
+      ok: false,
+      error: engineError('WORKER_NOT_FOUND', `Worker ${cmd.workerIdA} not found`),
+    };
   }
   if (!wB) {
-    return { ok: false, error: engineError('WORKER_NOT_FOUND', `Worker ${cmd.workerIdB} not found`) };
+    return {
+      ok: false,
+      error: engineError('WORKER_NOT_FOUND', `Worker ${cmd.workerIdB} not found`),
+    };
   }
   if (wA.state !== 'idle') {
     return { ok: false, error: engineError('WORKER_NOT_IDLE', `Worker A is not idle`) };
@@ -89,7 +95,10 @@ export function applyMergeWorkers(
     return { ok: false, error: engineError('WORKER_NOT_IDLE', `Worker B is not idle`) };
   }
   if (wA.level !== wB.level) {
-    return { ok: false, error: engineError('WORKER_LEVEL_MISMATCH', 'Workers must be the same level') };
+    return {
+      ok: false,
+      error: engineError('WORKER_LEVEL_MISMATCH', 'Workers must be the same level'),
+    };
   }
   state.workers.delete(cmd.workerIdA);
   state.workers.delete(cmd.workerIdB);
@@ -151,7 +160,10 @@ export function applyAssignWorker(
   if (adx + ady !== 1) {
     return {
       ok: false,
-      error: engineError('WORKER_POSITION_NOT_ADJACENT', 'Position must be adjacent (4-dir) to target'),
+      error: engineError(
+        'WORKER_POSITION_NOT_ADJACENT',
+        'Position must be adjacent (4-dir) to target',
+      ),
     };
   }
   const posCell = cellAt(level, cmd.positionX, cmd.positionY, balance.chunkSize);
@@ -214,10 +226,7 @@ export function applyAssignWorker(
   return { ok: true, events: [] };
 }
 
-export function applyUnassignWorker(
-  state: EngineState,
-  cmd: UnassignWorkerCommand,
-): ApplyResult {
+export function applyUnassignWorker(state: EngineState, cmd: UnassignWorkerCommand): ApplyResult {
   const worker = state.workers.get(cmd.workerId);
   if (!worker) {
     return { ok: false, error: engineError('WORKER_NOT_FOUND', 'Worker not found') };
@@ -264,12 +273,7 @@ export function readWorkerCosts(state: EngineState, balance: BalanceConfig): Wor
 
 // ---- Internal helpers ----
 
-function cellAt(
-  level: LevelData,
-  x: number,
-  y: number,
-  chunkSize: number,
-): CellData | undefined {
+function cellAt(level: LevelData, x: number, y: number, chunkSize: number): CellData | undefined {
   const cx = Math.floor(x / chunkSize);
   const cy = Math.floor(y / chunkSize);
   const id = chunkId(level.id, cx, cy);
