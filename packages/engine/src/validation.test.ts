@@ -70,14 +70,14 @@ describe('phase guards — shift_running blocks planning commands', () => {
   it('buy_storage fails in shift_running', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'v', startingMoney: 9999 });
     engine.apply({ type: 'start_next_shift' });
-    const r = engine.apply({ type: 'buy_storage', resourceId: STONE });
+    const r = engine.apply({ type: 'buy_storage' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('WRONG_PHASE');
   });
 
   it('upgrade_storage fails in shift_running', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'v', startingMoney: 9999 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
     const s = engine.read({ type: 'get_storages' }).storages[0];
     if (!s) return;
     engine.apply({ type: 'start_next_shift' });
@@ -278,7 +278,7 @@ describe('assign_worker validations', () => {
       seedPhrase: 'v',
       startingMoney: DEFAULT_BALANCE.storageBaseCost,
     });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
     const s = engine.read({ type: 'get_storages' }).storages[0];
     if (!s) return;
     const r = engine.apply({ type: 'upgrade_storage', storageId: s.id });

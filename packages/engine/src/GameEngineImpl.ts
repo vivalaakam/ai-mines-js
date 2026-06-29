@@ -15,6 +15,7 @@ import {
 import { runExtraction } from './simulation/extraction.js';
 import {
   applyBuyStorage,
+  applySetStorageResource,
   applyUpgradeStorage,
   readStorageCosts,
   readStorages,
@@ -60,6 +61,8 @@ export class GameEngineImpl implements GameEngine {
         return applyUnassignWorker(this.state, command);
       case 'buy_storage':
         return applyBuyStorage(this.state, this.balance, command);
+      case 'set_storage_resource':
+        return applySetStorageResource(this.state, command);
       case 'upgrade_storage':
         return applyUpgradeStorage(this.state, this.balance, command);
       case 'accept_order':

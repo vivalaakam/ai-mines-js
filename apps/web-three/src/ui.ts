@@ -130,8 +130,8 @@ function findCellInLevel(level: LevelData, x: number, y: number) {
   return undefined;
 }
 
-// Close popup on click outside
-document.addEventListener('click', (e) => {
+// Close popup on next pointerdown outside (avoids closing the popup that was just opened by mouseup)
+document.addEventListener('pointerdown', (e) => {
   if (!popup.contains(e.target as Node)) closePopup();
 });
 
@@ -213,20 +213,38 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
 
   // Storages
   const sqRows = engine.read({ type: 'get_storages' });
-  const ownedResourceIds = new Set(sqRows.storages.map((s) => s.resource.id));
   rebuildPanel(storagePanel, 'Storages', (frag) => {
+    if (!sqRows.storages.length) frag.appendChild(row('— none —'));
     for (const s of sqRows.storages) {
-      frag.appendChild(row(`${s.resource.id}  ${Math.floor(s.storedAmount)}/${s.capacity}  Lv${s.level}`));
+      const label = s.resource
+        ? `${s.resource.name}  ${Math.floor(s.storedAmount)}/${s.capacity}  Lv${s.level}`
+        : `[не назначен]  —/${s.capacity}  Lv${s.level}`;
+      frag.appendChild(row(label));
       if (status.phase === 'shift_planning') {
+        // Resource picker (shown for unassigned, or as "Change" for assigned)
+        const sel = document.createElement('select');
+        sel.style.cssText = 'background:#112;color:#ddf;border:1px solid #446;font-size:11px;margin:2px 0;width:100%;';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = s.resource ? `→ Сменить (очистит запасы)` : '→ Выбрать ресурс…';
+        sel.appendChild(placeholder);
+        for (const r of RESOURCES) {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.name;
+          if (s.resource?.id === r.id) opt.selected = true;
+          sel.appendChild(opt);
+        }
+        sel.addEventListener('change', () => {
+          if (sel.value) applyCmd({ type: 'set_storage_resource', storageId: s.id, resourceId: sel.value as import('@ai-mines/shared').ResourceId });
+        });
+        frag.appendChild(sel);
         frag.appendChild(btn('↑ Upgrade', () => applyCmd({ type: 'upgrade_storage', storageId: s.id })));
       }
     }
     if (status.phase === 'shift_planning') {
-      for (const r of RESOURCES.filter((r) => r.minDepth === 0 && !ownedResourceIds.has(r.id))) {
-        frag.appendChild(btn(`+ Buy ${r.name} Storage`, () => applyCmd({ type: 'buy_storage', resourceId: r.id })));
-      }
+      frag.appendChild(btn('+ Buy Storage', () => applyCmd({ type: 'buy_storage' })));
     }
-    if (!sqRows.storages.length && status.phase !== 'shift_planning') frag.appendChild(row('— none —'));
   });
 
   // Workers

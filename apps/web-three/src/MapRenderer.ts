@@ -8,8 +8,8 @@ export const CELL_SIZE = 24; // pixels per cell
 const COLOR = {
   empty_visible: 0x2a2a2a,
   empty_scouted: 0x1a1a1a,
-  deposit_visible: 0x4a7c3f,
-  deposit_scouted: 0x2a4a24,
+  deposit_visible: 0x5fa84f,
+  deposit_scouted: 0x3d6b32,
   obstacle_visible: 0x555555,
   obstacle_scouted: 0x333333,
   stairs_visible: 0xd4a017,

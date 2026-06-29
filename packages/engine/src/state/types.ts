@@ -71,7 +71,7 @@ export interface WorkerData {
 
 export interface StorageData {
   readonly id: StorageId;
-  readonly resourceId: ResourceId;
+  resourceId: ResourceId | null;
   level: number;
   capacity: number;
   storedAmount: number;

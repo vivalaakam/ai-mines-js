@@ -6,6 +6,14 @@ import { storageCapacity, storageUpgradeCost } from './storageSystem.js';
 const STONE = resourceId('stone');
 const COAL = resourceId('coal');
 
+// helper: buy + assign resource
+function buyStorage(engine: ReturnType<typeof GameEngineFactory.createNew>, resId = STONE) {
+  engine.apply({ type: 'buy_storage' });
+  const s = engine.read({ type: 'get_storages' }).storages.at(-1)!;
+  engine.apply({ type: 'set_storage_resource', storageId: s.id, resourceId: resId });
+  return engine.read({ type: 'get_storages' }).storages.at(-1)!;
+}
+
 // ---- formula tests ----
 
 describe('storageCapacity', () => {
@@ -43,21 +51,20 @@ describe('storageUpgradeCost', () => {
 // ---- buy_storage ----
 
 describe('buy_storage', () => {
-  it('creates a storage in shift_planning', () => {
+  it('creates an unassigned storage in shift_planning', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    const result = engine.apply({ type: 'buy_storage', resourceId: STONE });
+    const result = engine.apply({ type: 'buy_storage' });
     expect(result.ok).toBe(true);
     const { storages } = engine.read({ type: 'get_storages' });
     expect(storages).toHaveLength(1);
-    expect(storages[0]?.resource.id).toBe(STONE);
+    expect(storages[0]?.resource).toBeNull();
     expect(storages[0]?.level).toBe(1);
-    expect(storages[0]?.capacity).toBe(DEFAULT_BALANCE.storageBaseCapacity);
     expect(storages[0]?.storedAmount).toBe(0);
   });
 
   it('deducts storageBaseCost from money', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
     expect(engine.read({ type: 'get_game_status' }).money).toBe(
       1000 - DEFAULT_BALANCE.storageBaseCost,
     );
@@ -66,31 +73,66 @@ describe('buy_storage', () => {
   it('fails in shift_running', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
     engine.apply({ type: 'start_next_shift' });
-    const result = engine.apply({ type: 'buy_storage', resourceId: STONE });
+    const result = engine.apply({ type: 'buy_storage' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('WRONG_PHASE');
   });
 
-  it('fails with unknown resource', () => {
-    const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    const result = engine.apply({ type: 'buy_storage', resourceId: resourceId('unknown') });
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe('INVALID_RESOURCE');
-  });
-
   it('fails with insufficient funds', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1 });
-    const result = engine.apply({ type: 'buy_storage', resourceId: STONE });
+    const result = engine.apply({ type: 'buy_storage' });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('INSUFFICIENT_FUNDS');
   });
 
-  it('can buy multiple storages for different resources', () => {
+  it('can buy multiple storages', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
-    engine.apply({ type: 'buy_storage', resourceId: COAL });
-    const { storages } = engine.read({ type: 'get_storages' });
-    expect(storages).toHaveLength(2);
+    engine.apply({ type: 'buy_storage' });
+    engine.apply({ type: 'buy_storage' });
+    expect(engine.read({ type: 'get_storages' }).storages).toHaveLength(2);
+  });
+});
+
+// ---- set_storage_resource ----
+
+describe('set_storage_resource', () => {
+  it('assigns resource to unassigned storage', () => {
+    const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
+    const s = buyStorage(engine, STONE);
+    expect(s.resource?.id).toBe(STONE);
+  });
+
+  it('changes resource and clears storedAmount', () => {
+    const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
+    // Buy, assign stone, artificially set storedAmount via state export
+    engine.apply({ type: 'buy_storage' });
+    const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
+    engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: STONE });
+    // change to coal → storedAmount should reset to 0
+    const result = engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: COAL });
+    expect(result.ok).toBe(true);
+    const after = engine.read({ type: 'get_storages' }).storages[0];
+    expect(after?.resource?.id).toBe(COAL);
+    expect(after?.storedAmount).toBe(0);
+  });
+
+  it('fails with unknown resource', () => {
+    const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
+    engine.apply({ type: 'buy_storage' });
+    const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
+    const result = engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: resourceId('unknown') });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_RESOURCE');
+  });
+
+  it('fails in shift_running', () => {
+    const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
+    engine.apply({ type: 'buy_storage' });
+    const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
+    engine.apply({ type: 'start_next_shift' });
+    const result = engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: STONE });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('WRONG_PHASE');
   });
 });
 
@@ -99,11 +141,7 @@ describe('buy_storage', () => {
 describe('upgrade_storage', () => {
   it('increases level and capacity', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 10000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
-    const { storages } = engine.read({ type: 'get_storages' });
-    const s = storages[0];
-    expect(s).toBeDefined();
-    if (!s) return;
+    const s = buyStorage(engine);
     const result = engine.apply({ type: 'upgrade_storage', storageId: s.id });
     expect(result.ok).toBe(true);
     const after = engine.read({ type: 'get_storages' }).storages[0];
@@ -113,22 +151,15 @@ describe('upgrade_storage', () => {
 
   it('deducts upgrade cost', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 10000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
-    const moneyAfterBuy = engine.read({ type: 'get_game_status' }).money;
-    const { storages } = engine.read({ type: 'get_storages' });
-    const s = storages[0];
-    if (!s) return;
+    const s = buyStorage(engine);
+    const moneyBefore = engine.read({ type: 'get_game_status' }).money;
     engine.apply({ type: 'upgrade_storage', storageId: s.id });
-    const upgradeCost = storageUpgradeCost(1, DEFAULT_BALANCE);
-    expect(engine.read({ type: 'get_game_status' }).money).toBe(moneyAfterBuy - upgradeCost);
+    expect(engine.read({ type: 'get_game_status' }).money).toBe(moneyBefore - storageUpgradeCost(1, DEFAULT_BALANCE));
   });
 
   it('fails in shift_running', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 10000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
-    const { storages } = engine.read({ type: 'get_storages' });
-    const s = storages[0];
-    if (!s) return;
+    const s = buyStorage(engine);
     engine.apply({ type: 'start_next_shift' });
     const result = engine.apply({ type: 'upgrade_storage', storageId: s.id });
     expect(result.ok).toBe(false);
@@ -150,10 +181,7 @@ describe('upgrade_storage', () => {
       seedPhrase: 'test',
       startingMoney: DEFAULT_BALANCE.storageBaseCost,
     });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
-    const { storages } = engine.read({ type: 'get_storages' });
-    const s = storages[0];
-    if (!s) return;
+    const s = buyStorage(engine);
     const result = engine.apply({ type: 'upgrade_storage', storageId: s.id });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('INSUFFICIENT_FUNDS');
@@ -169,15 +197,15 @@ describe('get_storage_costs', () => {
     expect(costs.buyNewCost).toBe(DEFAULT_BALANCE.storageBaseCost);
   });
 
-  it('returns empty upgradeCosts when no storage exists', () => {
+  it('returns empty upgradeCosts when no stone storage exists', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
     const costs = engine.read({ type: 'get_storage_costs', resourceId: STONE });
     expect(costs.upgradeCosts).toHaveLength(0);
   });
 
-  it('includes upgrade cost after buying storage', () => {
+  it('includes upgrade cost after assigning resource', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    buyStorage(engine, STONE);
     const costs = engine.read({ type: 'get_storage_costs', resourceId: STONE });
     expect(costs.upgradeCosts).toHaveLength(1);
     expect(costs.upgradeCosts[0]?.cost).toBe(storageUpgradeCost(1, DEFAULT_BALANCE));
@@ -185,7 +213,7 @@ describe('get_storage_costs', () => {
 
   it('does not include storages of other resources in upgradeCosts', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
-    engine.apply({ type: 'buy_storage', resourceId: COAL });
+    buyStorage(engine, COAL);
     const costs = engine.read({ type: 'get_storage_costs', resourceId: STONE });
     expect(costs.upgradeCosts).toHaveLength(0);
   });

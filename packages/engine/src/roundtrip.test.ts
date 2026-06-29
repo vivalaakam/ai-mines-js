@@ -52,7 +52,7 @@ function findDeposit(
 describe('round-trip — basic state fields', () => {
   it('cloned state has same money, tick, phase', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'rt', startingMoney: 999 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
     engine.apply({ type: 'start_next_shift' });
     engine.apply({ type: 'tick', ticksPassed: 10 });
 
@@ -85,7 +85,9 @@ describe('round-trip — basic state fields', () => {
 
   it('cloned engine has same storages', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'rt-s', startingMoney: 9999 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
+    const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
+    engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: STONE });
 
     const clone = cloneState(engine.exportState());
     const engine2 = GameEngineFactory.createFromState(clone);
@@ -94,7 +96,7 @@ describe('round-trip — basic state fields', () => {
     const st2 = engine2.read({ type: 'get_storages' }).storages;
 
     expect(st2).toHaveLength(st1.length);
-    expect(st2[0]?.resource.id).toBe(st1[0]?.resource.id);
+    expect(st2[0]?.resource?.id).toBe(st1[0]?.resource?.id);
     expect(st2[0]?.capacity).toBe(st1[0]?.capacity);
   });
 

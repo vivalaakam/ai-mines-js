@@ -1,6 +1,6 @@
 import { RESOURCES, engineError, storageId } from '@ai-mines/shared';
 import type { BalanceConfig, ResourceId, StorageId } from '@ai-mines/shared';
-import type { BuyStorageCommand, UpgradeStorageCommand } from '../commands/types.js';
+import type { BuyStorageCommand, SetStorageResourceCommand, UpgradeStorageCommand } from '../commands/types.js';
 import type { StorageCostsResult, StoragesResult } from '../queries/types.js';
 import type { ApplyResult } from '../GameEngine.js';
 import type { EngineState } from '../state/types.js';
@@ -20,14 +20,10 @@ export function storageUpgradeCost(currentLevel: number, balance: BalanceConfig)
 export function applyBuyStorage(
   state: EngineState,
   balance: BalanceConfig,
-  cmd: BuyStorageCommand,
+  _cmd: BuyStorageCommand,
 ): ApplyResult {
   if (state.phase !== 'shift_planning') {
     return { ok: false, error: engineError('WRONG_PHASE', 'buy_storage requires shift_planning') };
-  }
-  const resource = RESOURCES.find((r) => r.id === cmd.resourceId);
-  if (!resource) {
-    return { ok: false, error: engineError('INVALID_RESOURCE', 'Unknown resource') };
   }
   const cost = balance.storageBaseCost;
   if (state.money < cost) {
@@ -37,11 +33,31 @@ export function applyBuyStorage(
   const id = storageId(`s${state.nextEntityId++}`);
   state.storages.set(id, {
     id,
-    resourceId: cmd.resourceId,
+    resourceId: null,
     level: 1,
     capacity: storageCapacity(1, balance),
     storedAmount: 0,
   });
+  return { ok: true, events: [] };
+}
+
+export function applySetStorageResource(
+  state: EngineState,
+  cmd: SetStorageResourceCommand,
+): ApplyResult {
+  if (state.phase !== 'shift_planning') {
+    return { ok: false, error: engineError('WRONG_PHASE', 'set_storage_resource requires shift_planning') };
+  }
+  const storage = state.storages.get(cmd.storageId);
+  if (!storage) {
+    return { ok: false, error: engineError('STORAGE_NOT_FOUND', 'Storage not found') };
+  }
+  const resource = RESOURCES.find((r) => r.id === cmd.resourceId);
+  if (!resource) {
+    return { ok: false, error: engineError('INVALID_RESOURCE', 'Unknown resource') };
+  }
+  storage.resourceId = cmd.resourceId;
+  storage.storedAmount = 0; // clear contents on resource type change
   return { ok: true, events: [] };
 }
 
@@ -71,17 +87,13 @@ export function applyUpgradeStorage(
 }
 
 export function readStorages(state: EngineState): StoragesResult {
-  const storages = Array.from(state.storages.values()).map((s) => {
-    const resource = RESOURCES.find((r) => r.id === s.resourceId);
-    if (!resource) throw new Error(`Unknown resource ${s.resourceId}`);
-    return {
-      id: s.id,
-      resource,
-      level: s.level,
-      capacity: s.capacity,
-      storedAmount: s.storedAmount,
-    };
-  });
+  const storages = Array.from(state.storages.values()).map((s) => ({
+    id: s.id,
+    resource: s.resourceId ? (RESOURCES.find((r) => r.id === s.resourceId) ?? null) : null,
+    level: s.level,
+    capacity: s.capacity,
+    storedAmount: s.storedAmount,
+  }));
   return { type: 'get_storages', storages };
 }
 

@@ -9,6 +9,7 @@ export type EngineCommand =
   | BuyWorkerCommand
   | MergeWorkersCommand
   | BuyStorageCommand
+  | SetStorageResourceCommand
   | UpgradeStorageCommand
   | AcceptOrderCommand
   | DeclineOrderCommand
@@ -56,6 +57,11 @@ export interface MergeWorkersCommand {
 
 export interface BuyStorageCommand {
   readonly type: 'buy_storage';
+}
+
+export interface SetStorageResourceCommand {
+  readonly type: 'set_storage_resource';
+  readonly storageId: StorageId;
   readonly resourceId: ResourceId;
 }
 

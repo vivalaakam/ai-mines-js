@@ -123,7 +123,7 @@ export interface WorkerCostsResult {
 
 export interface StorageView {
   readonly id: StorageId;
-  readonly resource: ResourceDefinition;
+  readonly resource: ResourceDefinition | null;
   readonly level: number;
   readonly capacity: number;
   readonly storedAmount: number;

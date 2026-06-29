@@ -179,9 +179,10 @@ describe('storage + order full fulfillment', () => {
   it('buy storage → accept order → fill storage → run shift → order completed', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'full', startingMoney: 9999 });
 
-    engine.apply({ type: 'buy_storage', resourceId: COAL });
+    engine.apply({ type: 'buy_storage' });
     const storages = engine.read({ type: 'get_storages' }).storages;
     expect(storages).toHaveLength(1);
+    engine.apply({ type: 'set_storage_resource', storageId: storages[0]!.id, resourceId: COAL });
 
     const state = engine.exportState();
     const sid = storages[0]?.id;

@@ -148,7 +148,9 @@ describe('save and load', () => {
 
   it('preserves storages', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'storage-test', startingMoney: 9999 });
-    engine.apply({ type: 'buy_storage', resourceId: STONE });
+    engine.apply({ type: 'buy_storage' });
+    const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
+    engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: STONE });
     const state = engine.exportState();
     adapter.save(state);
 
