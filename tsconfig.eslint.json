@@ -13,6 +13,7 @@
     "eslint.config.mjs",
     "packages/*/src/**/*.ts",
     "packages/*/vitest.config.ts",
-    "apps/*/src/**/*.ts"
+    "apps/*/src/**/*.ts",
+    "apps/*/vite.config.ts"
   ]
 }
