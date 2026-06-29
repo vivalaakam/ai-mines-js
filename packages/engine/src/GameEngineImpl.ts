@@ -5,6 +5,13 @@ import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
 import type { EngineQuery, GameStatusResult, QueryResult } from './queries/types.js';
 import type { EngineState } from './state/types.js';
+import {
+  applyAcceptOrder,
+  applyDeclineOrder,
+  applySetOrderPriority,
+  readOrders,
+  runOrderAllocation,
+} from './orders/orderSystem.js';
 import { runExtraction } from './simulation/extraction.js';
 import {
   applyBuyStorage,
@@ -55,11 +62,14 @@ export class GameEngineImpl implements GameEngine {
         return applyBuyStorage(this.state, this.balance, command);
       case 'upgrade_storage':
         return applyUpgradeStorage(this.state, this.balance, command);
+      case 'accept_order':
+        return applyAcceptOrder(this.state, command);
+      case 'decline_order':
+        return applyDeclineOrder(this.state, command);
+      case 'set_order_priority':
+        return applySetOrderPriority(this.state, command);
       default:
-        return {
-          ok: false,
-          error: engineError('WRONG_PHASE', `Command "${command.type}" not yet implemented`),
-        };
+        return { ok: false, error: engineError('WRONG_PHASE', 'Command not implemented') };
     }
   }
 
@@ -77,6 +87,8 @@ export class GameEngineImpl implements GameEngine {
         const q = query as import('./queries/types.js').GetStorageCostsQuery;
         return readStorageCosts(this.state, this.balance, q.resourceId) as QueryResult<Q>;
       }
+      case 'get_orders':
+        return readOrders(this.state) as QueryResult<Q>;
       default:
         throw new Error(`Query "${query.type}" not yet implemented`);
     }
@@ -107,6 +119,7 @@ export class GameEngineImpl implements GameEngine {
 
     if (toProcess === remaining) {
       this.state.phase = 'shift_planning';
+      events.push(...runOrderAllocation(this.state));
       events.push({ type: 'shift_completed', shiftNumber: this.state.currentShift });
       events.push({ type: 'autosave_requested', reason: 'shift_completed' });
     }
@@ -131,6 +144,7 @@ export class GameEngineImpl implements GameEngine {
       ok: true,
       events: [
         ...extractionEvents,
+        ...runOrderAllocation(this.state),
         { type: 'shift_completed', shiftNumber: this.state.currentShift },
         { type: 'autosave_requested', reason: 'shift_completed' },
       ],
