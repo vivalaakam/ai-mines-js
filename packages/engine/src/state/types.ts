@@ -28,6 +28,8 @@ export interface CellData {
   accessibility: CellAccessibility;
   workProgress: number;
   components: CellComponent[];
+  /** BFS distance from level entry; -1 = unreachable or not yet computed */
+  distanceFromEntry: number;
 }
 
 // --- Chunk ---

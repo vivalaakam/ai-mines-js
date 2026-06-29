@@ -61,20 +61,21 @@ function cellAt(
 function bfsReachability(level: LevelData, p: VisibilityParams): void {
   const { entryX, entryY } = level;
   const visited = new Set<string>([`${entryX},${entryY}`]);
-  const queue: [number, number][] = [[entryX, entryY]];
+  const queue: [number, number, number][] = [[entryX, entryY, 0]];
 
   while (queue.length > 0) {
     const item = queue.shift();
     if (!item) break;
-    const [x, y] = item;
+    const [x, y, dist] = item;
     const cell = cellAt(level, x, y, p, false);
     if (!cell || cell.kind === 'obstacle') continue;
     cell.accessibility = 'reachable';
+    cell.distanceFromEntry = dist;
     for (const [dx, dy] of DIRS) {
       const key = `${x + dx},${y + dy}`;
       if (!visited.has(key)) {
         visited.add(key);
-        queue.push([x + dx, y + dy]);
+        queue.push([x + dx, y + dy, dist + 1]);
       }
     }
   }

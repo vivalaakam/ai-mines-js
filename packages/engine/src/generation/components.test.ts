@@ -139,6 +139,7 @@ function makeDepositCell(remainingAmounts: number[]): CellData {
     visibility: 'scouted',
     accessibility: 'reachable',
     workProgress: 0,
+    distanceFromEntry: 0,
     components: remainingAmounts.map((rem, i) => ({
       type: i === 0 ? 'rock' : 'resource',
       resourceId: null,
@@ -183,6 +184,7 @@ describe('cellExtraction', () => {
       visibility: 'scouted',
       accessibility: 'reachable',
       workProgress: 0,
+      distanceFromEntry: 0,
       components: [],
     };
     expect(isFullyExtracted(cell)).toBe(false);

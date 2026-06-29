@@ -85,7 +85,16 @@ export function generateChunk(params: GenerateChunkParams): ChunkData {
             })
           : [];
 
-      cells.push({ x: wx, y: wy, kind, visibility, accessibility, workProgress: 0, components });
+      cells.push({
+        x: wx,
+        y: wy,
+        kind,
+        visibility,
+        accessibility,
+        workProgress: 0,
+        components,
+        distanceFromEntry: -1,
+      });
     }
   }
 

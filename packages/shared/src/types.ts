@@ -56,6 +56,10 @@ export interface BalanceConfig {
   readonly workerLevelUnlockOffset: number;
   readonly orderAllocationMode: OrderAllocationMode;
   readonly allowWorkerReassignmentDuringShift: boolean;
+  /** Base ticks required to fully mine depth-0 cell at distance 0 */
+  readonly baseLaborPerDepth: number;
+  /** Multiplier applied based on highest-rarity resource in deposit cell */
+  readonly resourceModifiers: { readonly [K in ResourceRarity]: number };
 }
 
 export const DEFAULT_BALANCE: BalanceConfig = {
@@ -71,4 +75,12 @@ export const DEFAULT_BALANCE: BalanceConfig = {
   workerLevelUnlockOffset: 2,
   orderAllocationMode: 'priority_based',
   allowWorkerReassignmentDuringShift: false,
+  baseLaborPerDepth: 10,
+  resourceModifiers: {
+    common: 1.0,
+    uncommon: 1.2,
+    rare: 1.5,
+    epic: 2.0,
+    legendary: 3.0,
+  },
 };
