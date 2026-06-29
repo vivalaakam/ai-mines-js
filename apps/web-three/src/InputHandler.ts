@@ -1,14 +1,13 @@
 import * as THREE from 'three';
-import type { GameEngine, LevelData, CellData } from '@ai-mines/engine';
+import type { GameEngine, LevelData, CellData, WorkerData } from '@ai-mines/engine';
 import { CELL_SIZE } from './MapRenderer.js';
-import { showCellTooltip, hideCellTooltip } from './ui.js';
+import { showCellTooltip, hideCellTooltip, showWorkerPopup, hideWorkerPopup } from './ui.js';
 
 export class InputHandler {
   private isDragging = false;
   private dragStart = { x: 0, y: 0 };
   private cameraOffset = { x: 0, y: 0 };
   private zoom = 1;
-  private selectedWorkerId: string | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -63,47 +62,28 @@ export class InputHandler {
     const level = state.levels.values().next().value as LevelData | undefined;
     if (!level) return;
 
-    const cellCoord = this.screenToCell(e.clientX, e.clientY);
-    const clickedCell = this.findCell(level, cellCoord.x, cellCoord.y);
+    const { x, y } = this.screenToCell(e.clientX, e.clientY);
+    const cell = this.findCell(level, x, y);
 
-    // Show tooltip for non-empty cells (always, regardless of phase)
-    if (clickedCell && clickedCell.kind !== 'empty') {
-      showCellTooltip(this.cellTooltipLines(clickedCell), e.clientX, e.clientY);
-    } else {
-      hideCellTooltip();
-    }
-
-    // Worker assignment only during shift_planning
-    const status = this.engine.read({ type: 'get_game_status' });
-    if (status.phase !== 'shift_planning') return;
-
-    if (this.selectedWorkerId) {
-      const workerPos = this.findAdjacentAccessible(level, cellCoord.x, cellCoord.y);
-      if (workerPos) {
-        this.applyCmd({
-          type: 'assign_worker',
-          workerId: this.selectedWorkerId as import('@ai-mines/shared').WorkerId,
-          levelId: level.id,
-          positionX: workerPos.x,
-          positionY: workerPos.y,
-          targetCellX: cellCoord.x,
-          targetCellY: cellCoord.y,
-        });
-      } else {
-        console.warn('[input] No accessible adjacent cell for assignment');
-      }
-      this.selectedWorkerId = null;
+    // Non-empty cell → tooltip (any phase)
+    if (cell && cell.kind !== 'empty') {
+      hideWorkerPopup();
+      showCellTooltip(this.cellTooltipLines(cell), e.clientX, e.clientY);
       return;
     }
 
-    // Click on empty/reachable → select first idle worker
-    for (const w of state.workers.values()) {
-      if (w.state === 'idle') {
-        this.selectedWorkerId = w.id;
-        console.log(`[input] Selected worker ${w.id} — click a deposit cell to assign`);
-        return;
-      }
-    }
+    hideCellTooltip();
+
+    // Empty reachable cell during planning → worker placement popup
+    const status = this.engine.read({ type: 'get_game_status' });
+    if (status.phase !== 'shift_planning') return;
+
+    if (!cell || cell.accessibility !== 'reachable') return;
+
+    const idleWorkers = [...state.workers.values()].filter(
+      (w): w is WorkerData => w.state === 'idle',
+    );
+    showWorkerPopup(x, y, level, idleWorkers, this.applyCmd, e.clientX, e.clientY);
   }
 
   private findCell(level: LevelData, x: number, y: number): CellData | undefined {
@@ -149,28 +129,6 @@ export class InputHandler {
       x: Math.round(worldX / CELL_SIZE),
       y: Math.round(-worldY / CELL_SIZE),
     };
-  }
-
-  private findAdjacentAccessible(
-    level: LevelData,
-    tx: number,
-    ty: number,
-  ): { x: number; y: number } | null {
-    const candidates = [
-      { x: tx - 1, y: ty },
-      { x: tx + 1, y: ty },
-      { x: tx, y: ty - 1 },
-      { x: tx, y: ty + 1 },
-    ];
-    for (const pos of candidates) {
-      for (const chunk of level.chunks.values()) {
-        const cell = chunk.cells.find((c) => c.x === pos.x && c.y === pos.y);
-        if (cell && cell.accessibility === 'reachable' && cell.kind === 'empty') {
-          return pos;
-        }
-      }
-    }
-    return null;
   }
 
   dispose(): void {

@@ -1,4 +1,5 @@
-import type { GameEngine } from '@ai-mines/engine';
+import type { GameEngine, LevelData, WorkerData } from '@ai-mines/engine';
+import type { LevelId, WorkerId } from '@ai-mines/shared';
 import { RESOURCES } from '@ai-mines/shared';
 
 type ApplyCmd = (cmd: Parameters<GameEngine['apply']>[0]) => void;
@@ -39,6 +40,100 @@ export function hideCellTooltip(): void {
   clearTimeout(tooltipTimer);
   tooltip.style.display = 'none';
 }
+
+// ---- Worker placement popup ----
+
+const popup = document.createElement('div');
+popup.style.cssText = `
+  position:fixed; display:none; background:rgba(10,10,25,0.97);
+  border:1px solid #448; padding:8px 12px; z-index:101;
+  color:#ddd; font-family:monospace; font-size:12px; min-width:200px;
+  pointer-events:all;
+`;
+document.body.appendChild(popup);
+
+function closePopup(): void { popup.style.display = 'none'; }
+
+const DIRS = [
+  { label: '←', dx: -1, dy: 0 },
+  { label: '→', dx:  1, dy: 0 },
+  { label: '↑', dx:  0, dy: -1 },
+  { label: '↓', dx:  0, dy:  1 },
+];
+
+function dirBtn(label: string, active: boolean, onClick: () => void): HTMLButtonElement {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.style.cssText = `
+    background:${active ? '#136' : '#222'}; border:1px solid ${active ? '#36a' : '#444'};
+    color:${active ? '#adf' : '#666'}; padding:2px 7px; margin:0 2px;
+    cursor:${active ? 'pointer' : 'default'}; font-size:14px; font-family:monospace;
+  `;
+  if (active) b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
+  return b;
+}
+
+export function showWorkerPopup(
+  cellX: number, cellY: number,
+  level: LevelData,
+  idleWorkers: WorkerData[],
+  applyCmd: ApplyCmd,
+  screenX: number, screenY: number,
+): void {
+  popup.innerHTML = `<b style="color:#aaf">Разместить в (${cellX}, ${cellY})</b>
+<hr style="border-color:#334;margin:4px 0">`;
+
+  if (!idleWorkers.length) {
+    popup.innerHTML += '<div style="color:#888">Нет свободных рабочих</div>';
+  }
+
+  for (const w of idleWorkers) {
+    const wRow = document.createElement('div');
+    wRow.style.cssText = 'display:flex; align-items:center; gap:4px; margin:3px 0;';
+    const label = document.createElement('span');
+    label.textContent = `W${w.id.slice(-4)} Lv${w.level}`;
+    label.style.minWidth = '80px';
+    wRow.appendChild(label);
+
+    for (const { label: dl, dx, dy } of DIRS) {
+      const tx = cellX + dx, ty = cellY + dy;
+      const target = findCellInLevel(level, tx, ty);
+      const active = target?.kind === 'deposit' && target.visibility === 'scouted';
+      wRow.appendChild(dirBtn(dl, active, () => {
+        applyCmd({
+          type: 'assign_worker',
+          workerId: w.id as WorkerId,
+          levelId: level.id as LevelId,
+          positionX: cellX,
+          positionY: cellY,
+          targetCellX: tx,
+          targetCellY: ty,
+        });
+        closePopup();
+      }));
+    }
+    popup.appendChild(wRow);
+  }
+
+  popup.style.left = `${Math.min(screenX + 12, window.innerWidth - 230)}px`;
+  popup.style.top = `${Math.min(screenY + 12, window.innerHeight - 160)}px`;
+  popup.style.display = 'block';
+}
+
+export function hideWorkerPopup(): void { closePopup(); }
+
+function findCellInLevel(level: LevelData, x: number, y: number) {
+  for (const chunk of level.chunks.values()) {
+    const c = chunk.cells.find((cell) => cell.x === x && cell.y === y);
+    if (c) return c;
+  }
+  return undefined;
+}
+
+// Close popup on click outside
+document.addEventListener('click', (e) => {
+  if (!popup.contains(e.target as Node)) closePopup();
+});
 
 const topBar = document.createElement('div');
 topBar.style.cssText = `
