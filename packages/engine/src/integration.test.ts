@@ -373,3 +373,55 @@ describe('save_game command', () => {
     }
   });
 });
+
+// ---- T-027: smoke test — full cycle ----
+
+describe('T-027 smoke: new game → ticks → shift end → planning → next shift', () => {
+  it('completes a full cycle without errors', () => {
+    const engine = GameEngineFactory.createNew({
+      seedPhrase: 'smoke-t027',
+      startingMoney: 9999,
+      balance: { ...DEFAULT_BALANCE, ticksPerShift: 10 },
+    });
+
+    // Initial state: shift_planning
+    expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_planning');
+    expect(engine.read({ type: 'get_game_status' }).currentShift).toBe(0);
+
+    // Start shift
+    const startResult = engine.apply({ type: 'start_next_shift' });
+    expect(startResult.ok).toBe(true);
+    expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_running');
+
+    // Run N ticks — should end shift
+    const tickResult = engine.apply({ type: 'tick', ticksPassed: 10 });
+    expect(tickResult.ok).toBe(true);
+    expect(tickResult.events.some((e) => e.type === 'shift_completed')).toBe(true);
+    expect(tickResult.events.some((e) => e.type === 'autosave_requested')).toBe(true);
+
+    // Back to planning
+    expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_planning');
+    expect(engine.read({ type: 'get_game_status' }).currentShift).toBe(1);
+
+    // Start next shift
+    const shift2 = engine.apply({ type: 'start_next_shift' });
+    expect(shift2.ok).toBe(true);
+    expect(engine.read({ type: 'get_game_status' }).currentShift).toBe(2);
+    expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_running');
+  });
+
+  it('fast_forward_to_shift_end completes shift instantly', () => {
+    const engine = GameEngineFactory.createNew({
+      seedPhrase: 'smoke-ff',
+      startingMoney: 9999,
+      balance: { ...DEFAULT_BALANCE, ticksPerShift: 300 },
+    });
+    engine.apply({ type: 'start_next_shift' });
+    engine.apply({ type: 'tick', ticksPassed: 5 });
+
+    const result = engine.apply({ type: 'fast_forward_to_shift_end' });
+    expect(result.ok).toBe(true);
+    expect(result.events.some((e) => e.type === 'shift_completed')).toBe(true);
+    expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_planning');
+  });
+});
