@@ -24,7 +24,7 @@
 
 ## Фаза 2 — packages/engine (ядро)
 
-- [ ] **T-004** Скелет engine: интерфейс `GameEngine`, `GameEngineFactory`, `ApplyResult`, `ReadResult`, `EngineCommand`, `EngineQuery`, `EngineState`
+- [x] **T-004** Скелет engine: интерфейс `GameEngine`, `GameEngineFactory`, `ApplyResult`, `ReadResult`, `EngineCommand`, `EngineQuery`, `EngineState`
 - [ ] **T-005** Система времени: tick, смены (300 тиков), фазы `shift_running` / `shift_planning`, команды `tick` / `fast_forward_to_shift_end` / `start_next_shift`, возврат `remainingTicks` и события `autosave_requested`
 - [ ] **T-006** Конфиг движка: `allowWorkerReassignmentDuringShift`, `baseLevelSize`, `levelSizeMultiplier`, `maxLevelSize`, `orderAllocationMode` — все в balance-config, не захардкожено
 - [ ] **T-007** Генератор карты: детерминированный seed (`seedPhrase + levelDepth + chunkX + chunkY + generatorVersion`), чанки 32×32, ленивая генерация, стартовая область 5×5 чанков, зона входа 3×3, зона спуска 3×3 в нецентральном чанке, гарантия достижимости

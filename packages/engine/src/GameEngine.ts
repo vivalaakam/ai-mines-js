@@ -1,8 +1,11 @@
+import { engineError } from '@ai-mines/shared';
 import type { EngineError } from '@ai-mines/shared';
+import { GameEngineImpl } from './GameEngineImpl.js';
 import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
 import type { EngineQuery, QueryResult } from './queries/types.js';
 import type { EngineState, NewGameConfig } from './state/types.js';
+import { makeInitialState } from './state/makeInitialState.js';
 
 export type ApplyResult =
   | { readonly ok: true; readonly events: EngineEvent[] }
@@ -15,11 +18,14 @@ export interface GameEngine {
 }
 
 export class GameEngineFactory {
-  static createNew(_config: NewGameConfig): GameEngine {
-    throw new Error('Not implemented — see T-005+');
+  static createNew(config: NewGameConfig): GameEngine {
+    if (!config.seedPhrase.trim()) {
+      throw new Error(engineError('WRONG_PHASE', 'seedPhrase must not be empty').message);
+    }
+    return new GameEngineImpl(makeInitialState(config));
   }
 
-  static createFromState(_state: EngineState): GameEngine {
-    throw new Error('Not implemented — see T-017');
+  static createFromState(state: EngineState): GameEngine {
+    return new GameEngineImpl(state);
   }
 }
