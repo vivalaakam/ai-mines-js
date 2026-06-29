@@ -4,6 +4,7 @@ import type { GameEngine, EngineState } from '@ai-mines/engine';
 import { MapRenderer, CELL_SIZE } from './MapRenderer.js';
 import { WorkerRenderer } from './WorkerRenderer.js';
 import { updateUI } from './ui.js';
+import { InputHandler } from './InputHandler.js';
 
 
 // ---- Persistence (localStorage) ----
@@ -150,6 +151,15 @@ function gameLoop(now: number): void {
 
   renderer.render(scene, camera);
 }
+
+// ---- Input ----
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const input = new InputHandler(
+  renderer.domElement,
+  camera,
+  engine,
+  (cmd) => applyAndHandleEvents(engine.apply(cmd)),
+);
 
 // Kick off the first shift automatically
 applyAndHandleEvents(engine.apply({ type: 'start_next_shift' }));
