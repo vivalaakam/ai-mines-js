@@ -28,7 +28,7 @@
 - [x] **T-005** Система времени: tick, смены (300 тиков), фазы `shift_running` / `shift_planning`, команды `tick` / `fast_forward_to_shift_end` / `start_next_shift`, возврат `remainingTicks` и события `autosave_requested`
 - [x] **T-006** Конфиг движка: `allowWorkerReassignmentDuringShift`, `baseLevelSize`, `levelSizeMultiplier`, `maxLevelSize`, `orderAllocationMode` — все в balance-config, не захардкожено
 - [x] **T-007** Генератор карты: детерминированный seed (`seedPhrase + levelDepth + chunkX + chunkY + generatorVersion`), чанки 32×32, ленивая генерация, стартовая область 5×5 чанков, зона входа 3×3, зона спуска 3×3 в нецентральном чанке, гарантия достижимости
-- [ ] **T-008** Типы и компоненты клеток: `CellKind`, `CellComponent` (rock/resource, ratio, remainingAmount), полная выработка → `empty`, ограничение коридоров ≤ 3 клетки
+- [x] **T-008** Типы и компоненты клеток: `CellKind`, `CellComponent` (rock/resource, ratio, remainingAmount), полная выработка → `empty`, ограничение коридоров ≤ 3 клетки
 - [ ] **T-009** Видимость и достижимость: `reachableCells` (BFS/flood-fill от входа), разведка радиус 5 от каждой достижимой клетки, авто-догенерация соседних чанков при выходе за границу, раскрытие связанных пустот целиком
 - [ ] **T-010** Трудоёмкость клеток: зависимость от глубины уровня, расстояния от входа (множитель 1.01 per cell, compound), типа ресурса
 - [ ] **T-011** Система работников: уровни, скорость разработки, покупка (`maxPurchasableWorkerLevel = max(1, highest - 2)`), merge (2 одного уровня → 1 следующего), назначение (max 4 с разных сторон клетки), позиция = соседняя открытая достижимая клетка
