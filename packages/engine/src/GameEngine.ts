@@ -1,5 +1,5 @@
-import { engineError } from '@ai-mines/shared';
-import type { EngineError } from '@ai-mines/shared';
+import { DEFAULT_BALANCE, engineError } from '@ai-mines/shared';
+import type { BalanceConfig, EngineError } from '@ai-mines/shared';
 import { GameEngineImpl } from './GameEngineImpl.js';
 import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
@@ -17,15 +17,20 @@ export interface GameEngine {
   exportState(): EngineState;
 }
 
+function resolveBalance(override?: Partial<BalanceConfig>): BalanceConfig {
+  return { ...DEFAULT_BALANCE, ...override };
+}
+
 export class GameEngineFactory {
   static createNew(config: NewGameConfig): GameEngine {
     if (!config.seedPhrase.trim()) {
       throw new Error(engineError('WRONG_PHASE', 'seedPhrase must not be empty').message);
     }
-    return new GameEngineImpl(makeInitialState(config));
+    const balance = resolveBalance(config.balance);
+    return new GameEngineImpl(makeInitialState(config, balance), balance);
   }
 
-  static createFromState(state: EngineState): GameEngine {
-    return new GameEngineImpl(state);
+  static createFromState(state: EngineState, balanceOverride?: Partial<BalanceConfig>): GameEngine {
+    return new GameEngineImpl(state, resolveBalance(balanceOverride));
   }
 }

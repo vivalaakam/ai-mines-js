@@ -10,11 +10,12 @@ import { ticksRemainingInShift } from './time/time.js';
 export class GameEngineImpl implements GameEngine {
   private readonly balance: BalanceConfig;
 
+  // ponytail: balance defaults to DEFAULT_BALANCE so tests/stubs can omit it
   constructor(
     private readonly state: EngineState,
-    balance?: Partial<BalanceConfig>,
+    balance: BalanceConfig = DEFAULT_BALANCE,
   ) {
-    this.balance = { ...DEFAULT_BALANCE, ...balance };
+    this.balance = balance;
   }
 
   apply(command: EngineCommand): ApplyResult {

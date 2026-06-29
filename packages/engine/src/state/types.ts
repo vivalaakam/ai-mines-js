@@ -114,7 +114,7 @@ export interface EngineState {
 export interface NewGameConfig {
   readonly seedPhrase: string;
   readonly generatorVersion?: number;
-  readonly orderAllocationMode?: OrderAllocationMode;
-  readonly allowWorkerReassignmentDuringShift?: boolean;
   readonly startingMoney?: number;
+  /** Override any balance values. Falls back to DEFAULT_BALANCE for omitted fields. */
+  readonly balance?: Partial<import('@ai-mines/shared').BalanceConfig>;
 }
