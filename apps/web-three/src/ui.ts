@@ -20,6 +20,7 @@ tooltip.style.cssText = `
   position:fixed; display:none; background:rgba(10,10,20,0.95);
   border:1px solid #556; padding:6px 10px; pointer-events:none;
   line-height:1.6; white-space:pre; z-index:100;
+  color:#ddd; font-family:monospace; font-size:12px;
 `;
 document.body.appendChild(tooltip);
 
