@@ -4,6 +4,7 @@ import { GameEngineImpl } from './GameEngineImpl.js';
 import type { EngineCommand } from './commands/types.js';
 import type { EngineEvent } from './events/types.js';
 import { generateLevel } from './generation/LevelGenerator.js';
+import { updateVisibility } from './map/visibility.js';
 import type { EngineQuery, QueryResult } from './queries/types.js';
 import type { EngineState, NewGameConfig } from './state/types.js';
 import { makeInitialState } from './state/makeInitialState.js';
@@ -36,6 +37,15 @@ export class GameEngineFactory {
       balance,
     );
     state.levels.set(level.id, level);
+    updateVisibility(
+      level,
+      {
+        seedPhrase: config.seedPhrase,
+        generatorVersion: state.generatorVersion,
+        chunkSize: balance.chunkSize,
+      },
+      balance.scoutRadius,
+    );
 
     return new GameEngineImpl(state, balance);
   }
