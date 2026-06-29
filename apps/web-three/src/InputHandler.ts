@@ -6,7 +6,6 @@ import { showCellTooltip, hideCellTooltip, showWorkerPopup, hideWorkerPopup } fr
 export class InputHandler {
   private isDragging = false;
   private dragStart = { x: 0, y: 0 };
-  private cameraOffset = { x: 0, y: 0 };
   private zoom = 1;
 
   constructor(
@@ -32,10 +31,9 @@ export class InputHandler {
     if (!this.isDragging) return;
     const dx = (e.clientX - this.dragStart.x) / this.zoom;
     const dy = (e.clientY - this.dragStart.y) / this.zoom;
-    this.cameraOffset.x -= dx;
-    this.cameraOffset.y += dy;
+    this.camera.position.x -= dx;
+    this.camera.position.y += dy;
     this.dragStart = { x: e.clientX, y: e.clientY };
-    this.applyOffset();
   };
 
   private readonly onMouseUp = (e: MouseEvent): void => {
@@ -50,10 +48,6 @@ export class InputHandler {
     this.camera.zoom = this.zoom;
     this.camera.updateProjectionMatrix();
   };
-
-  private applyOffset(): void {
-    this.camera.position.set(this.cameraOffset.x, this.cameraOffset.y, 10);
-  }
 
   // ---- Cell click ----
 
@@ -122,8 +116,8 @@ export class InputHandler {
 
     const halfW = (this.camera.right - this.camera.left) / 2 / this.zoom;
     const halfH = (this.camera.top - this.camera.bottom) / 2 / this.zoom;
-    const worldX = this.cameraOffset.x + ndcX * halfW;
-    const worldY = this.cameraOffset.y + ndcY * halfH;
+    const worldX = this.camera.position.x + ndcX * halfW;
+    const worldY = this.camera.position.y + ndcY * halfH;
 
     return {
       x: Math.round(worldX / CELL_SIZE),
