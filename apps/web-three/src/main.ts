@@ -3,6 +3,7 @@ import { GameEngineFactory } from '@ai-mines/engine';
 import type { GameEngine, EngineState } from '@ai-mines/engine';
 import { MapRenderer, CELL_SIZE } from './MapRenderer.js';
 import { WorkerRenderer } from './WorkerRenderer.js';
+import { updateUI } from './ui.js';
 
 
 // ---- Persistence (localStorage) ----
@@ -144,6 +145,8 @@ function gameLoop(now: number): void {
   const state = engine.exportState();
   const level = state.levels.values().next().value;
   if (level) workerRenderer.update(level, state.workers as Map<string, import('@ai-mines/engine').WorkerData>);
+
+  updateUI(engine, (cmd) => applyAndHandleEvents(engine.apply(cmd)));
 
   renderer.render(scene, camera);
 }
