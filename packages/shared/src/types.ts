@@ -60,6 +60,14 @@ export interface BalanceConfig {
   readonly baseLaborPerDepth: number;
   /** Multiplier applied based on highest-rarity resource in deposit cell */
   readonly resourceModifiers: { readonly [K in ResourceRarity]: number };
+  /** Cost of a level-1 worker in money */
+  readonly workerBaseCost: number;
+  /** Cost multiplier per worker level (cost = workerBaseCost * workerCostMultiplier^(level-1)) */
+  readonly workerCostMultiplier: number;
+  /** Mining speed of a level-1 worker (units/tick) */
+  readonly workerBaseSpeed: number;
+  /** Speed multiplier per worker level */
+  readonly workerSpeedMultiplier: number;
 }
 
 export const DEFAULT_BALANCE: BalanceConfig = {
@@ -83,4 +91,8 @@ export const DEFAULT_BALANCE: BalanceConfig = {
     epic: 2.0,
     legendary: 3.0,
   },
+  workerBaseCost: 50,
+  workerCostMultiplier: 2.0,
+  workerBaseSpeed: 1.0,
+  workerSpeedMultiplier: 1.5,
 };

@@ -6,6 +6,14 @@ import type { EngineEvent } from './events/types.js';
 import type { EngineQuery, GameStatusResult, QueryResult } from './queries/types.js';
 import type { EngineState } from './state/types.js';
 import { ticksRemainingInShift } from './time/time.js';
+import {
+  applyAssignWorker,
+  applyBuyWorker,
+  applyMergeWorkers,
+  applyUnassignWorker,
+  readWorkerCosts,
+  readWorkers,
+} from './workers/workerSystem.js';
 
 export class GameEngineImpl implements GameEngine {
   private readonly balance: BalanceConfig;
@@ -28,6 +36,14 @@ export class GameEngineImpl implements GameEngine {
         return this.applyStartNextShift();
       case 'save_game':
         return { ok: true, events: [{ type: 'autosave_requested', reason: 'manual' }] };
+      case 'buy_worker':
+        return applyBuyWorker(this.state, this.balance, command);
+      case 'merge_workers':
+        return applyMergeWorkers(this.state, command);
+      case 'assign_worker':
+        return applyAssignWorker(this.state, this.balance, command);
+      case 'unassign_worker':
+        return applyUnassignWorker(this.state, command);
       default:
         return {
           ok: false,
@@ -40,6 +56,10 @@ export class GameEngineImpl implements GameEngine {
     switch (query.type) {
       case 'get_game_status':
         return this.readGameStatus() as QueryResult<Q>;
+      case 'get_workers':
+        return readWorkers(this.state) as QueryResult<Q>;
+      case 'get_worker_costs':
+        return readWorkerCosts(this.state, this.balance) as QueryResult<Q>;
       default:
         throw new Error(`Query "${query.type}" not yet implemented`);
     }

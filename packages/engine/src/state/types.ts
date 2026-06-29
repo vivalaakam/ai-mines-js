@@ -107,6 +107,7 @@ export interface EngineState {
   unlockedResources: ResourceId[];
   readonly orderAllocationMode: OrderAllocationMode;
   readonly allowWorkerReassignmentDuringShift: boolean;
+  nextEntityId: number;
   levels: Map<LevelId, LevelData>;
   workers: Map<WorkerId, WorkerData>;
   storages: Map<StorageId, StorageData>;

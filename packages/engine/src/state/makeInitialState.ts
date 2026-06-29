@@ -20,6 +20,7 @@ export function makeInitialState(config: NewGameConfig, balance: BalanceConfig):
     unlockedResources: [],
     orderAllocationMode: balance.orderAllocationMode,
     allowWorkerReassignmentDuringShift: balance.allowWorkerReassignmentDuringShift,
+    nextEntityId: 1,
     levels: new Map(),
     workers: new Map(),
     storages: new Map(),
