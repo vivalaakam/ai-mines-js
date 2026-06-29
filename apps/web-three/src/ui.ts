@@ -258,6 +258,24 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
       }
     }
     if (status.phase === 'shift_planning') {
+      // Merge buttons: one per level where ≥2 idle workers exist
+      const idleByLevel = new Map<number, import('@ai-mines/shared').WorkerId[]>();
+      for (const w of state.workers.values()) {
+        if (w.state === 'idle') {
+          const list = idleByLevel.get(w.level) ?? [];
+          list.push(w.id as import('@ai-mines/shared').WorkerId);
+          idleByLevel.set(w.level, list);
+        }
+      }
+      for (const [lvl, ids] of idleByLevel) {
+        if (ids.length >= 2) {
+          const [a, b] = ids as [import('@ai-mines/shared').WorkerId, import('@ai-mines/shared').WorkerId];
+          frag.appendChild(btn(
+            `⚡ Merge Lv${lvl}→Lv${lvl + 1}`,
+            () => applyCmd({ type: 'merge_workers', workerIdA: a, workerIdB: b }),
+          ));
+        }
+      }
       frag.appendChild(btn('+ Buy Worker', () => applyCmd({ type: 'buy_worker', level: 1 })));
     }
   });
