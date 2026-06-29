@@ -13,6 +13,32 @@ overlay.style.cssText = `
 `;
 document.body.appendChild(overlay);
 
+// ---- Cell tooltip ----
+
+const tooltip = document.createElement('div');
+tooltip.style.cssText = `
+  position:fixed; display:none; background:rgba(10,10,20,0.95);
+  border:1px solid #556; padding:6px 10px; pointer-events:none;
+  line-height:1.6; white-space:pre; z-index:100;
+`;
+document.body.appendChild(tooltip);
+
+let tooltipTimer = 0;
+
+export function showCellTooltip(lines: string[], screenX: number, screenY: number): void {
+  clearTimeout(tooltipTimer);
+  tooltip.textContent = lines.join('\n');
+  tooltip.style.left = `${Math.min(screenX + 12, window.innerWidth - 220)}px`;
+  tooltip.style.top = `${Math.min(screenY + 12, window.innerHeight - 120)}px`;
+  tooltip.style.display = 'block';
+  tooltipTimer = window.setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
+}
+
+export function hideCellTooltip(): void {
+  clearTimeout(tooltipTimer);
+  tooltip.style.display = 'none';
+}
+
 const topBar = document.createElement('div');
 topBar.style.cssText = `
   display:flex; gap:12px; align-items:center; padding:6px 10px;
