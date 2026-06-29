@@ -7,10 +7,5 @@
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../../packages/shared" },
-    { "path": "../../packages/engine" },
-    { "path": "../../packages/persistence-sqlite" }
-  ]
+  "include": ["src"]
 }

@@ -161,8 +161,6 @@ const input = new InputHandler(
   (cmd) => applyAndHandleEvents(engine.apply(cmd)),
 );
 
-// Kick off the first shift automatically
-applyAndHandleEvents(engine.apply({ type: 'start_next_shift' }));
 requestAnimationFrame(gameLoop);
 
 // Expose engine on window for dev console access

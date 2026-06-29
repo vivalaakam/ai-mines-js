@@ -396,6 +396,7 @@ describe('T-027 smoke: new game → ticks → shift end → planning → next sh
     // Run N ticks — should end shift
     const tickResult = engine.apply({ type: 'tick', ticksPassed: 10 });
     expect(tickResult.ok).toBe(true);
+    if (!tickResult.ok) throw new Error('unreachable');
     expect(tickResult.events.some((e) => e.type === 'shift_completed')).toBe(true);
     expect(tickResult.events.some((e) => e.type === 'autosave_requested')).toBe(true);
 
@@ -421,6 +422,7 @@ describe('T-027 smoke: new game → ticks → shift end → planning → next sh
 
     const result = engine.apply({ type: 'fast_forward_to_shift_end' });
     expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('unreachable');
     expect(result.events.some((e) => e.type === 'shift_completed')).toBe(true);
     expect(engine.read({ type: 'get_game_status' }).phase).toBe('shift_planning');
   });
