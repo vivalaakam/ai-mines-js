@@ -99,8 +99,8 @@ const initialState = engine.exportState();
 const firstLevel = initialState.levels.values().next().value;
 if (firstLevel) {
   mapRenderer.buildLevel(firstLevel);
-  // Center camera on entry point
-  mapRenderer.centerOn(firstLevel.entryX * CELL_SIZE, firstLevel.entryY * CELL_SIZE);
+  // Position camera at entry point (cells live at natural world coords cellX*CELL_SIZE)
+  camera.position.set(firstLevel.entryX * CELL_SIZE, -firstLevel.entryY * CELL_SIZE, 10);
 }
 
 // ---- Game loop ----

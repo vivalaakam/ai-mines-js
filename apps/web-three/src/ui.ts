@@ -8,7 +8,7 @@ type ApplyCmd = (cmd: Parameters<GameEngine['apply']>[0]) => void;
 
 const overlay = document.createElement('div');
 overlay.style.cssText = `
-  position:fixed; top:0; left:0; width:100%; height:100%;
+  position:fixed; top:0; left:0; width:100%; height:100%; z-index:10;
   pointer-events:none; font-family:monospace; font-size:12px; color:#ddd;
   display:flex; flex-direction:column; justify-content:space-between;
 `;

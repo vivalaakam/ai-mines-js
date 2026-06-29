@@ -91,9 +91,8 @@ export class MapRenderer {
     }
   }
 
-  centerOn(worldX: number, worldY: number): void {
-    this.group.position.set(-worldX, worldY, 0);
-  }
+  // kept for API compat; camera positioning done externally
+  centerOn(_worldX: number, _worldY: number): void { /* no-op */ }
 
   private clear(): void {
     for (const m of [...this.cellMeshes, ...this.highlightMeshes]) {
