@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GameEngineFactory } from '@ai-mines/engine';
 import type { GameEngine, EngineState } from '@ai-mines/engine';
 import { MapRenderer, CELL_SIZE } from './MapRenderer.js';
+import { WorkerRenderer } from './WorkerRenderer.js';
 
 
 // ---- Persistence (localStorage) ----
@@ -89,6 +90,7 @@ window.addEventListener('resize', () => {
 
 const engine = createEngine();
 const mapRenderer = new MapRenderer(scene);
+const workerRenderer = new WorkerRenderer(scene);
 
 // Build map from first level
 const initialState = engine.exportState();
@@ -137,6 +139,11 @@ function gameLoop(now: number): void {
       applyAndHandleEvents(engine.apply({ type: 'tick', ticksPassed: ticks }));
     }
   }
+
+  // Update worker dots every frame for smooth progress bars
+  const state = engine.exportState();
+  const level = state.levels.values().next().value;
+  if (level) workerRenderer.update(level, state.workers as Map<string, import('@ai-mines/engine').WorkerData>);
 
   renderer.render(scene, camera);
 }
