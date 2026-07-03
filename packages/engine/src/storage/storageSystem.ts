@@ -1,6 +1,10 @@
 import { RESOURCES, engineError, storageId } from '@ai-mines/shared';
 import type { BalanceConfig, ResourceId, StorageId } from '@ai-mines/shared';
-import type { BuyStorageCommand, SetStorageResourceCommand, UpgradeStorageCommand } from '../commands/types.js';
+import type {
+  BuyStorageCommand,
+  SetStorageResourceCommand,
+  UpgradeStorageCommand,
+} from '../commands/types.js';
 import type { StorageCostsResult, StoragesResult } from '../queries/types.js';
 import type { ApplyResult } from '../GameEngine.js';
 import type { EngineState } from '../state/types.js';
@@ -46,7 +50,10 @@ export function applySetStorageResource(
   cmd: SetStorageResourceCommand,
 ): ApplyResult {
   if (state.phase !== 'shift_planning') {
-    return { ok: false, error: engineError('WRONG_PHASE', 'set_storage_resource requires shift_planning') };
+    return {
+      ok: false,
+      error: engineError('WRONG_PHASE', 'set_storage_resource requires shift_planning'),
+    };
   }
   const storage = state.storages.get(cmd.storageId);
   if (!storage) {

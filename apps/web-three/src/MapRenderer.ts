@@ -68,7 +68,7 @@ export class MapRenderer {
         this.cellMeshes.push(mesh);
 
         // Reachable highlight overlay
-        if (cell.accessibility === 'reachable' && cell.visibility !== 'unknown') {
+        if (cell.accessibility === 'reachable') {
           const hl = makeMesh(COLOR.reachable_tint, 0.1);
           (hl.material as THREE.MeshBasicMaterial).transparent = true;
           (hl.material as THREE.MeshBasicMaterial).opacity = 0.15;
@@ -93,7 +93,9 @@ export class MapRenderer {
   }
 
   // kept for API compat; camera positioning done externally
-  centerOn(_worldX: number, _worldY: number): void { /* no-op */ }
+  centerOn(_worldX: number, _worldY: number): void {
+    /* no-op */
+  }
 
   private clear(): void {
     for (const m of [...this.cellMeshes, ...this.highlightMeshes]) {

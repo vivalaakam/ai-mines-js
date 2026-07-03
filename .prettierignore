@@ -1,3 +1,5 @@
 dist/
 node_modules/
 *.lock
+apps/web-three/src-tauri/target/
+apps/web-three/src-tauri/gen/

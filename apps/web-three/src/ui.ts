@@ -33,7 +33,9 @@ export function showCellTooltip(lines: string[], screenX: number, screenY: numbe
   tooltip.style.left = `${Math.min(screenX + 12, window.innerWidth - 220)}px`;
   tooltip.style.top = `${Math.min(screenY + 12, window.innerHeight - 120)}px`;
   tooltip.style.display = 'block';
-  tooltipTimer = window.setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
+  tooltipTimer = window.setTimeout(() => {
+    tooltip.style.display = 'none';
+  }, 3000);
 }
 
 export function hideCellTooltip(): void {
@@ -52,13 +54,15 @@ popup.style.cssText = `
 `;
 document.body.appendChild(popup);
 
-function closePopup(): void { popup.style.display = 'none'; }
+function closePopup(): void {
+  popup.style.display = 'none';
+}
 
 const DIRS = [
   { label: '←', dx: -1, dy: 0 },
-  { label: '→', dx:  1, dy: 0 },
-  { label: '↑', dx:  0, dy: -1 },
-  { label: '↓', dx:  0, dy:  1 },
+  { label: '→', dx: 1, dy: 0 },
+  { label: '↑', dx: 0, dy: -1 },
+  { label: '↓', dx: 0, dy: 1 },
 ];
 
 function dirBtn(label: string, active: boolean, onClick: () => void): HTMLButtonElement {
@@ -69,16 +73,22 @@ function dirBtn(label: string, active: boolean, onClick: () => void): HTMLButton
     color:${active ? '#adf' : '#666'}; padding:2px 7px; margin:0 2px;
     cursor:${active ? 'pointer' : 'default'}; font-size:14px; font-family:monospace;
   `;
-  if (active) b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
+  if (active)
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClick();
+    });
   return b;
 }
 
 export function showWorkerPopup(
-  cellX: number, cellY: number,
+  cellX: number,
+  cellY: number,
   level: LevelData,
   idleWorkers: WorkerData[],
   applyCmd: ApplyCmd,
-  screenX: number, screenY: number,
+  screenX: number,
+  screenY: number,
 ): void {
   popup.innerHTML = `<b style="color:#aaf">Разместить в (${cellX}, ${cellY})</b>
 <hr style="border-color:#334;margin:4px 0">`;
@@ -96,21 +106,24 @@ export function showWorkerPopup(
     wRow.appendChild(label);
 
     for (const { label: dl, dx, dy } of DIRS) {
-      const tx = cellX + dx, ty = cellY + dy;
+      const tx = cellX + dx,
+        ty = cellY + dy;
       const target = findCellInLevel(level, tx, ty);
       const active = target?.kind === 'deposit' && target.visibility === 'scouted';
-      wRow.appendChild(dirBtn(dl, active, () => {
-        applyCmd({
-          type: 'assign_worker',
-          workerId: w.id as WorkerId,
-          levelId: level.id as LevelId,
-          positionX: cellX,
-          positionY: cellY,
-          targetCellX: tx,
-          targetCellY: ty,
-        });
-        closePopup();
-      }));
+      wRow.appendChild(
+        dirBtn(dl, active, () => {
+          applyCmd({
+            type: 'assign_worker',
+            workerId: w.id as WorkerId,
+            levelId: level.id as LevelId,
+            positionX: cellX,
+            positionY: cellY,
+            targetCellX: tx,
+            targetCellY: ty,
+          });
+          closePopup();
+        }),
+      );
     }
     popup.appendChild(wRow);
   }
@@ -120,7 +133,9 @@ export function showWorkerPopup(
   popup.style.display = 'block';
 }
 
-export function hideWorkerPopup(): void { closePopup(); }
+export function hideWorkerPopup(): void {
+  closePopup();
+}
 
 function findCellInLevel(level: LevelData, x: number, y: number) {
   for (const chunk of level.chunks.values()) {
@@ -184,7 +199,11 @@ function row(text: string): HTMLDivElement {
   return d;
 }
 
-function rebuildPanel(panel: HTMLDivElement, title: string, fill: (frag: DocumentFragment) => void): void {
+function rebuildPanel(
+  panel: HTMLDivElement,
+  title: string,
+  fill: (frag: DocumentFragment) => void,
+): void {
   panel.innerHTML = `<b style="color:#aaf">${title}</b><hr style="border-color:#333;margin:3px 0">`;
   const frag = document.createDocumentFragment();
   fill(frag);
@@ -199,17 +218,26 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
 
   // Top bar
   topBar.innerHTML = '';
-  topBar.appendChild(document.createTextNode(
-    `💰 ${Math.floor(state.money)}  |  Shift ${status.currentShift}  Tick ${status.currentTick}  [${status.phase}]  `,
-  ));
+  topBar.appendChild(
+    document.createTextNode(
+      `💰 ${Math.floor(state.money)}  |  Shift ${status.currentShift}  Tick ${status.currentTick}  [${status.phase}]  `,
+    ),
+  );
 
   if (status.phase === 'shift_planning') {
     topBar.appendChild(btn('▶ Start Shift', () => applyCmd({ type: 'start_next_shift' })));
   } else {
-    topBar.appendChild(btn('⏩ Fast Forward', () => applyCmd({ type: 'fast_forward_to_shift_end' })));
+    topBar.appendChild(
+      btn('⏩ Fast Forward', () => applyCmd({ type: 'fast_forward_to_shift_end' })),
+    );
   }
   topBar.appendChild(btn('💾 Save', () => applyCmd({ type: 'save_game' })));
-  topBar.appendChild(btn('🗑 New Game', () => { localStorage.clear(); location.reload(); }));
+  topBar.appendChild(
+    btn('🗑 New Game', () => {
+      localStorage.clear();
+      location.reload();
+    }),
+  );
 
   // Storages
   const sqRows = engine.read({ type: 'get_storages' });
@@ -223,7 +251,8 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
       if (status.phase === 'shift_planning') {
         // Resource picker (shown for unassigned, or as "Change" for assigned)
         const sel = document.createElement('select');
-        sel.style.cssText = 'background:#112;color:#ddf;border:1px solid #446;font-size:11px;margin:2px 0;width:100%;';
+        sel.style.cssText =
+          'background:#112;color:#ddf;border:1px solid #446;font-size:11px;margin:2px 0;width:100%;';
         const placeholder = document.createElement('option');
         placeholder.value = '';
         placeholder.textContent = s.resource ? `→ Сменить (очистит запасы)` : '→ Выбрать ресурс…';
@@ -236,10 +265,17 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
           sel.appendChild(opt);
         }
         sel.addEventListener('change', () => {
-          if (sel.value) applyCmd({ type: 'set_storage_resource', storageId: s.id, resourceId: sel.value as import('@ai-mines/shared').ResourceId });
+          if (sel.value)
+            applyCmd({
+              type: 'set_storage_resource',
+              storageId: s.id,
+              resourceId: sel.value as import('@ai-mines/shared').ResourceId,
+            });
         });
         frag.appendChild(sel);
-        frag.appendChild(btn('↑ Upgrade', () => applyCmd({ type: 'upgrade_storage', storageId: s.id })));
+        frag.appendChild(
+          btn('↑ Upgrade', () => applyCmd({ type: 'upgrade_storage', storageId: s.id })),
+        );
       }
     }
     if (status.phase === 'shift_planning') {
@@ -269,11 +305,15 @@ export function updateUI(engine: GameEngine, applyCmd: ApplyCmd): void {
       }
       for (const [lvl, ids] of idleByLevel) {
         if (ids.length >= 2) {
-          const [a, b] = ids as [import('@ai-mines/shared').WorkerId, import('@ai-mines/shared').WorkerId];
-          frag.appendChild(btn(
-            `⚡ Merge Lv${lvl}→Lv${lvl + 1}`,
-            () => applyCmd({ type: 'merge_workers', workerIdA: a, workerIdB: b }),
-          ));
+          const [a, b] = ids as [
+            import('@ai-mines/shared').WorkerId,
+            import('@ai-mines/shared').WorkerId,
+          ];
+          frag.appendChild(
+            btn(`⚡ Merge Lv${lvl}→Lv${lvl + 1}`, () =>
+              applyCmd({ type: 'merge_workers', workerIdA: a, workerIdB: b }),
+            ),
+          );
         }
       }
       frag.appendChild(btn('+ Buy Worker', () => applyCmd({ type: 'buy_worker', level: 1 })));

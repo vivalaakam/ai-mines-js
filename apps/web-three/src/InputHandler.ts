@@ -104,7 +104,9 @@ export class InputHandler {
     if (cell.workProgress > 0) lines.push(`Прогресс: ${Math.round(cell.workProgress * 100)}%`);
     for (const comp of cell.components) {
       const pct = Math.round(comp.ratio * 100);
-      lines.push(`  ${comp.resourceId ?? 'rock'}  ${pct}%  осталось: ${Math.round(comp.remainingAmount)}`);
+      lines.push(
+        `  ${comp.resourceId ?? 'rock'}  ${pct}%  осталось: ${Math.round(comp.remainingAmount)}`,
+      );
     }
     return lines;
   }
