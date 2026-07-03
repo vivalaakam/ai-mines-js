@@ -60,6 +60,7 @@ export class MapRenderer {
 
     for (const chunk of level.chunks.values()) {
       for (const cell of chunk.cells) {
+        if (cell.visibility === 'unknown') continue;
         // Base cell mesh
         const mesh = makeMesh(cellColor(cell), 0);
         mesh.position.set(cell.x * CELL_SIZE, -cell.y * CELL_SIZE, 0);

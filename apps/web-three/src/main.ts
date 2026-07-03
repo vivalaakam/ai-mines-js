@@ -114,6 +114,7 @@ let uiDirty = true;
 const applyCmd = (cmd: Parameters<GameEngine['apply']>[0]): void => {
   const result = engine.apply(cmd);
   if (!result.ok) { console.error('[mines] command failed:', result.error); return; }
+  if (cmd.type === 'start_next_shift') lastTickTime = performance.now();
   let needsMapRebuild = false;
   for (const event of result.events) {
     if (event.type === 'autosave_requested') {
