@@ -8,7 +8,10 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --build",
     "test": "vitest run",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "dev": "pnpm --filter @ai-mines/web-three dev",
+    "tauri:dev": "pnpm --filter @ai-mines/web-three tauri:dev",
+    "tauri:build": "pnpm --filter @ai-mines/web-three tauri:build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",

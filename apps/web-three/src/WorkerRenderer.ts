@@ -91,7 +91,11 @@ export class WorkerRenderer {
       const progress = this.cellProgress(level, worker);
       const barY = wy + CELL_SIZE / 2 - PROGRESS_HEIGHT - 1;
       m.progressBg.position.set(wx, barY, 1.1);
-      m.progressFg.position.set(wx - PROGRESS_WIDTH / 2 + (PROGRESS_WIDTH * progress) / 2, barY, 1.2);
+      m.progressFg.position.set(
+        wx - PROGRESS_WIDTH / 2 + (PROGRESS_WIDTH * progress) / 2,
+        barY,
+        1.2,
+      );
       m.progressFg.scale.set(Math.max(progress, 0.001), 1, 1);
       m.progressBg.visible = worker.state === 'working';
       m.progressFg.visible = worker.state === 'working';
@@ -117,10 +121,17 @@ export class WorkerRenderer {
   }
 
   private createMeshes(workerLevel: number): WorkerMeshes {
-    const dot = new THREE.Mesh(workerGeo, new THREE.MeshBasicMaterial({ color: levelColor(workerLevel) }));
+    const dot = new THREE.Mesh(
+      workerGeo,
+      new THREE.MeshBasicMaterial({ color: levelColor(workerLevel) }),
+    );
     const label = new THREE.Mesh(
       labelGeo,
-      new THREE.MeshBasicMaterial({ map: levelTexture(workerLevel), transparent: true, depthTest: false }),
+      new THREE.MeshBasicMaterial({
+        map: levelTexture(workerLevel),
+        transparent: true,
+        depthTest: false,
+      }),
     );
     const progressBg = new THREE.Mesh(bgGeo, new THREE.MeshBasicMaterial({ color: 0x222222 }));
     const progressFg = new THREE.Mesh(fgGeo, new THREE.MeshBasicMaterial({ color: 0x00aaff }));

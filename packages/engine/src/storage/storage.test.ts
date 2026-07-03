@@ -120,7 +120,11 @@ describe('set_storage_resource', () => {
     const engine = GameEngineFactory.createNew({ seedPhrase: 'test', startingMoney: 1000 });
     engine.apply({ type: 'buy_storage' });
     const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
-    const result = engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: resourceId('unknown') });
+    const result = engine.apply({
+      type: 'set_storage_resource',
+      storageId: sid,
+      resourceId: resourceId('unknown'),
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('INVALID_RESOURCE');
   });
@@ -130,7 +134,11 @@ describe('set_storage_resource', () => {
     engine.apply({ type: 'buy_storage' });
     const sid = engine.read({ type: 'get_storages' }).storages[0]!.id;
     engine.apply({ type: 'start_next_shift' });
-    const result = engine.apply({ type: 'set_storage_resource', storageId: sid, resourceId: STONE });
+    const result = engine.apply({
+      type: 'set_storage_resource',
+      storageId: sid,
+      resourceId: STONE,
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('WRONG_PHASE');
   });
@@ -154,7 +162,9 @@ describe('upgrade_storage', () => {
     const s = buyStorage(engine);
     const moneyBefore = engine.read({ type: 'get_game_status' }).money;
     engine.apply({ type: 'upgrade_storage', storageId: s.id });
-    expect(engine.read({ type: 'get_game_status' }).money).toBe(moneyBefore - storageUpgradeCost(1, DEFAULT_BALANCE));
+    expect(engine.read({ type: 'get_game_status' }).money).toBe(
+      moneyBefore - storageUpgradeCost(1, DEFAULT_BALANCE),
+    );
   });
 
   it('fails in shift_running', () => {

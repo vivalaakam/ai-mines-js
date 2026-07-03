@@ -4,7 +4,7 @@ import tsparser from '@typescript-eslint/parser';
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/*.d.ts'],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/*.d.ts', '**/src-tauri/**'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
